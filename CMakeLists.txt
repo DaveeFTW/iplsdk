@@ -4,3 +4,4 @@ project(iplsdk C ASM)
 
 add_subdirectory(src/crt)
 add_subdirectory(src/sysreg)
+add_subdirectory(src/uart)

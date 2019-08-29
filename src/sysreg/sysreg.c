@@ -16,3 +16,13 @@ void sysreg_io_enable_uart(int port)
 {
     *REG32(0xbc100078) |= (0x00010000 << port);
 }
+
+void sysreg_io_enable_gpio(void)
+{
+    *REG32(0xbc100058) |= 0x800000;
+}
+
+void sysreg_io_enable_gpio_port(int port)
+{
+    *REG32(0xbc10007c) |= (1 << port);
+}

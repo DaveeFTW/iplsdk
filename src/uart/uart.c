@@ -46,7 +46,7 @@ struct psp_uart_hw
 int uart_init(int port)
 {
 	struct psp_uart_hw *uart = UART_REGS(port);
-	int brg = 96000000 / 115200; // 115200 baud
+	unsigned int brg = 96000000 / 115200; // 115200 baud
 
     if (port == UART_UART4)
     {

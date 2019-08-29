@@ -14,20 +14,20 @@ ENTRY(_start)
 MEMORY
 {
     SCRATCH : ORIGIN = 0x00010000, LENGTH = 0x00010000
-    VRAM : ORIGIN = 0x04000000, LENGTH = 0x00400000
+    VRAM : ORIGIN = 0x040F0000, LENGTH = 0x00400000
 }
 
 SECTIONS
 {
-    .init : { *(.init.start) *(.init) } >SCRATCH
-    .text : { *(.text) } >SCRATCH
-    .sdata : { *(.sdata) *(.sdata.*) *(.gnu.linkonce.s.*) } >SCRATCH
-    .rodata : { *(.rodata) } > SCRATCH
-    .data : { *(.data*) } > SCRATCH
+    .init : { *(.init.start) *(.init) } >VRAM
+    .text : { *(.text) } >VRAM
+    .sdata : { *(.sdata) *(.sdata.*) *(.gnu.linkonce.s.*) } >VRAM
+    .rodata : { *(.rodata) } > VRAM
+    .data : { *(.data*) } > VRAM
     .bss :
     {
         __bss_start = .;
         *(.bss*)
         __bss_end = .;
-    } > SCRATCH
+    } > VRAM
 }

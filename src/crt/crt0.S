@@ -10,6 +10,38 @@
 .section .init.start
 .global _start
 _start:
+    la $t0, 0xBFD00000
+    la $t2, from_reset
+    lui $t1, 0x3C08
+    srl $t3, $t2, 16
+    or $t1, $t3
+    andi $t3, $t2, 0xFFFF
+    lui $t2, 0x3508
+    or $t2, $t3
+    li $t3, 0x1000008
+    sw $t1, 0($t0)
+    sw $t2, 4($t0)
+    sw $t3, 8($t0)
+    sw $0, 12($t0)
+    sync
+    la $a0, 0xBC10004C
+    lw $t0, 0($a0)
+    ori $t0, 2
+    sw $t0, 0($a0)
+
+sync_loop:
+    b sync_loop
+    sync
+ 
+from_reset:
+    lui $v0, 0x6000
+    mtc0 $v0, $12
+    mtc0 $0, $13
+    nop
+    li $t1, 0xFFFFFFFF
+    lui $t0, 0xBC10
+    sw $t1, 4($t0)
+
     la $sp, 0x041FFFF0
     la $a0, __bss_start
     la $a1, __bss_end

@@ -1,5 +1,7 @@
 #include "utils.h"
 
+#define REG32(ADDR) (*(volatile unsigned int*)(ADDR))
+
 void clear_dcache(void)
 {
 	asm("\
@@ -34,4 +36,19 @@ void clear_icache(void)
 	.word 0x1509FFFC;\
 	.word 0x00000000;\
 	"::);
+}
+
+unsigned int delay_us(unsigned int usec)
+{
+	unsigned int i = 0;
+	volatile unsigned int dmy = 0;
+
+	while(usec--)
+	{
+		for(i = 0; i < 10; ++i)
+		{
+			dmy ^= REG32(0xbe240000);
+		}
+	}
+	return dmy;
 }

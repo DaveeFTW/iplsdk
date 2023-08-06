@@ -46,7 +46,7 @@ struct psp_uart_hw
 int uart_init(int port)
 {
 	struct psp_uart_hw *uart = UART_REGS(port);
-	unsigned int brg = 96000000 / 115200; // 115200 baud
+	unsigned int brg = 96000000 / 921600; // 115200 baud
 
     if (port == UART_UART4)
     {
@@ -62,7 +62,7 @@ int uart_init(int port)
     else if (port == UART_HPREMOTE)
     {
         // hpremote
-        uart->r30 = 0x300;
+        uart->r30 = 0x300; // transmit enable, receive enable
         uart->brgh = brg>>6;   // 24 : 4800bps == 0x0138 : 20000
         uart->brgl = brg&0x3f; // 28 : 4800bps == 0x0020
         uart->r2c = 0x070;
@@ -93,7 +93,7 @@ int uart_init(int port)
 int uart_putc(int port, char c)
 {
 	struct psp_uart_hw *uart = UART_REGS(port);
-	while(uart->sts & psp_uart_sts_TI) asm("sync"::);
+	while(uart->sts & psp_uart_sts_TI) __asm("sync"::);
 	uart->txd = c;
     return 0;
 }
@@ -101,14 +101,14 @@ int uart_putc(int port, char c)
 int uart_getc(int port)
 {
 	struct psp_uart_hw *uart = UART_REGS(port);
-    while(uart->sts & psp_uart_sts_RE) asm("sync"::);
+    while(uart->sts & psp_uart_sts_RE) __asm("sync"::);
     return (uart->txd)&0xFF;
 }
 
 int uart_flush_tx(int port)
 {
 	struct psp_uart_hw *uart = UART_REGS(port);
-	while(uart->sts & psp_uart_sts_TI) asm("sync"::);
+	while(uart->sts & psp_uart_sts_TI) __asm("sync"::);
     return 0;
 }
 

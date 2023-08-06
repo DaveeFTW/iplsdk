@@ -1,21 +1,21 @@
 cmake_minimum_required(VERSION 2.8)
 
-project(uart C ASM)
+project(syscon ASM)
 
-add_library(uart STATIC uart.c uart.h)
+add_library(syscon STATIC syscon.c syscon.h)
 
-target_include_directories(uart
+target_include_directories(syscon
     PUBLIC
         $<INSTALL_INTERFACE:include>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
 )
 
-install(TARGETS uart
-        EXPORT uartTargets
+install(TARGETS syscon
+        EXPORT sysconTargets
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib
         RUNTIME DESTINATION bin
         INCLUDES DESTINATION include
 )
 
-install(FILES uart.h DESTINATION include)
+install(FILES syscon.h DESTINATION include)

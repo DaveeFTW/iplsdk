@@ -4,7 +4,7 @@
 
 void clear_dcache(void)
 {
-	asm("\
+	__asm("\
 	.word 0x40088000;\
 	.word 0x24090800;\
 	.word 0x7D081180;\
@@ -22,7 +22,7 @@ void clear_dcache(void)
 
 void clear_icache(void)
 {
-    asm("\
+    __asm("\
 	.word 0x40088000;\
 	.word 0x24091000;\
 	.word 0x7D081240;\

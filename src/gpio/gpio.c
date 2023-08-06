@@ -28,7 +28,17 @@ void gpio_clear(int port)
     *REG32(0xbe24000C) = (1 << port);
 }
 
-unsigned int gpio_read(int port)
+unsigned int gpio_read(void)
 {
     return *REG32(0xbe240004);
+}
+
+int gpio_query_interrupt(unsigned int port)
+{
+    return *REG32(0xbe240020) & (1 << port);
+}
+
+void gpio_acquire_interrupt(unsigned int port)
+{
+    *REG32(0xbe240024) = (1 << port);
 }

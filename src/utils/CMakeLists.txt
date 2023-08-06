@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 
-project(utils C)
+project(utils C ASM)
 
 add_library(utils STATIC utils.c utils.h)
 

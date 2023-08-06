@@ -29,7 +29,9 @@ enum PortMode
 void gpio_set_port_mode(int port, enum PortMode mode);
 void gpio_set(int port);
 void gpio_clear(int port);
-unsigned int gpio_read(int port);
+unsigned int gpio_read(void);
+int gpio_query_interrupt(unsigned int port);
+void gpio_acquire_interrupt(unsigned int port);
 
 #ifdef __cplusplus
 }

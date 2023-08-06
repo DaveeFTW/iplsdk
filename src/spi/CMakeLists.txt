@@ -1,21 +1,21 @@
 cmake_minimum_required(VERSION 2.8)
 
-project(uart C ASM)
+project(spi C)
 
-add_library(uart STATIC uart.c uart.h)
+add_library(spi STATIC pl022.c spi.h)
 
-target_include_directories(uart
+target_include_directories(spi
     PUBLIC
         $<INSTALL_INTERFACE:include>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
 )
 
-install(TARGETS uart
-        EXPORT uartTargets
+install(TARGETS spi
+        EXPORT spiTargets
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib
         RUNTIME DESTINATION bin
         INCLUDES DESTINATION include
 )
 
-install(FILES uart.h DESTINATION include)
+install(FILES spi.h DESTINATION include)

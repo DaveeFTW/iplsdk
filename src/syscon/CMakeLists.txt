@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 2.8)
 project(syscon ASM)
 
 add_library(syscon STATIC syscon.c syscon.h)
+target_link_libraries(syscon gpio)
 
 target_include_directories(syscon
     PUBLIC

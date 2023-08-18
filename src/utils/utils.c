@@ -2,6 +2,10 @@
 
 #define REG32(ADDR) (*(volatile unsigned int*)(ADDR))
 
+// void clear_dcache(void)
+// {
+// }
+
 void clear_dcache(void)
 {
 	__asm("\

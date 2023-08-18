@@ -1,0 +1,4 @@
+[{
+    "name": "psptoolchain-libk-baremetal-cmake",
+    "toolchainFile": "/usr/local/pspdev/share/bootstrap-psp-toolchain.cmake"
+}]

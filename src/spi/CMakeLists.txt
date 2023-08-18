@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8)
 
 project(spi C)
 
-add_library(spi STATIC pl022.c spi.h)
+add_library(spi STATIC spi.c spi.h)
 
 target_include_directories(spi
     PUBLIC

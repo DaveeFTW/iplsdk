@@ -1,5 +1,7 @@
 #include "sysreg.h"
 
+#include <stdint.h>
+
 #define REG32(addr) ((volatile unsigned int *)(addr))
 
 void sysreg_clock_enable_uart_bus(void)
@@ -106,4 +108,34 @@ void sysreg_clock_select_spi(unsigned int port, unsigned int clk)
     cur_bits &= clear_mask;
     cur_bits |= set_bits;
     *REG32(0xbc100064) = cur_bits;
+}
+
+enum ResetDevice
+{
+    SC = 1,
+
+    KIRK = 10
+};
+
+#define SYSREG_RESET_REG   (REG32(0xBC10004C))
+#define SYSREG_BUSCLK_REG  (REG32(0xBC100050))
+
+void sysreg_reset_enable(uint32_t devices)
+{
+    *SYSREG_RESET_REG |= devices;
+}
+
+void sysreg_reset_disable(uint32_t devices)
+{
+    *SYSREG_RESET_REG &= ~devices;
+}
+
+void sysreg_busclk_enable(uint32_t devices)
+{
+    *SYSREG_BUSCLK_REG |= devices;
+}
+
+void sysreg_busclk_disable(uint32_t devices)
+{
+    *SYSREG_BUSCLK_REG &= ~devices;
 }

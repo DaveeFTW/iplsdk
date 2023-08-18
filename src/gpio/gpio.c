@@ -42,3 +42,18 @@ void gpio_acquire_interrupt(unsigned int port)
 {
     *REG32(0xbe240024) = (1 << port);
 }
+
+void gpio_unmask_interrupt(unsigned int port)
+{
+    *REG32(0xbe240010) &= ~(1 << port);
+}
+
+void gpio_clear_unk14(unsigned int port)
+{
+    *REG32(0xbe240014) &= ~(1 << port);
+}
+
+void gpio_set_unk18(unsigned int port)
+{
+    *REG32(0xbe240018) |= (1 << port);
+}

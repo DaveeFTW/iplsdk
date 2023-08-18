@@ -32,6 +32,9 @@ void gpio_clear(int port);
 unsigned int gpio_read(void);
 int gpio_query_interrupt(unsigned int port);
 void gpio_acquire_interrupt(unsigned int port);
+void gpio_unmask_interrupt(unsigned int port);
+void gpio_clear_unk14(unsigned int port);
+void gpio_set_unk18(unsigned int port);
 
 #ifdef __cplusplus
 }

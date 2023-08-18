@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8)
 
 project(cpu ASM)
 
-add_library(cpu STATIC cpu.S cpu.h)
+add_library(cpu STATIC cache.S cpu.S cpu.h)
 
 target_include_directories(cpu
     PUBLIC

@@ -10,6 +10,15 @@
 .section .init.start
 .global _start
 _start:
+    la $t8, _start
+    bne $t8, $t9, reset_cpu
+    li $v1, 0xDAEE
+    bne $v0, $v1, reset_cpu
+    nop
+    j from_reset
+    nop
+
+reset_cpu:
     la $t0, 0xBFD00000
     la $t2, from_reset
     lui $t1, 0x3C08
@@ -32,7 +41,7 @@ _start:
 sync_loop:
     b sync_loop
     sync
- 
+
 from_reset:
     lui $v0, 0x6000
     mtc0 $v0, $12
@@ -42,6 +51,7 @@ from_reset:
     lui $t0, 0xBC10
     sw $t1, 4($t0)
 
+from_reset2:
     la $sp, 0x041FFFF0
     la $a0, __bss_start
     la $a1, __bss_end

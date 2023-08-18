@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 2.8)
 
-project(syscon ASM)
+project(syscon C)
 
-add_library(syscon STATIC syscon.c syscon.h)
-target_link_libraries(syscon gpio)
+add_library(syscon STATIC comms.c handshake.c syscon.c syscon.h)
+target_link_libraries(syscon gpio spi kirk sysreg)
 
 target_include_directories(syscon
     PUBLIC

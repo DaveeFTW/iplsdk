@@ -1,4 +1,4 @@
-FROM psptoolchain-libk-baremetal-cmake:latest
+FROM daveeftw/psptoolchain-allegrex-libk:latest
 
 COPY . /src
 

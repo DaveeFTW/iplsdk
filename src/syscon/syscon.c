@@ -3,7 +3,9 @@
 #include "sysreg.h"
 #include "spi.h"
 
-void syscon_init(void)
+unsigned int g_baryon_version = 0;
+
+int syscon_init(void)
 {
     // enable GPIO used for syscon sync
     sysreg_io_enable_gpio_port(GPIO_PORT_SYSCON_REQUEST);
@@ -29,11 +31,23 @@ void syscon_init(void)
     gpio_clear_unk14(GPIO_PORT_TACHYON_SPI_CS);
     gpio_set_unk18(GPIO_PORT_TACHYON_SPI_CS);
     gpio_acquire_interrupt(GPIO_PORT_TACHYON_SPI_CS);
+
+    // get the baryon version and store it for quick access. its not like
+    // this value will change... right?
+    if (syscon_issue_command_read(SYSCON_GET_BARYON_VERSION, (unsigned char *)&g_baryon_version) < 0)
+    {
+        return -1;
+    }
+
+    return 0;
 }
 
-int syscon_get_baryon_version(unsigned int *baryon)
+unsigned int syscon_get_baryon_version(void)
 {
-    return syscon_issue_command_read(SYSCON_GET_BARYON_VERSION, (unsigned char *)baryon);
+    // this value doesn't change. it is cached on syscon_init so we
+    // don't need to xchg across SPI everytime we want to know
+    // the version
+    return g_baryon_version;
 }
 
 int syscon_ctrl_led(unsigned int led, unsigned int on)
@@ -67,10 +81,7 @@ int syscon_ctrl_led(unsigned int led, unsigned int on)
     {
         // the "on" bit changed between PSP-1000, and beyond select the
         // correct bit as appropriate
-        unsigned int baryon = 0;
-        if (syscon_get_baryon_version(&baryon) < 0) {
-            return -2;
-        }
+        unsigned int baryon = syscon_get_baryon_version();
 
         const unsigned char psp_model = (baryon >> 16) & 0xF0;
         const unsigned char is_psp1000 = psp_model == 0x00 || psp_model == 0x10;

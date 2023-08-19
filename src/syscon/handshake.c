@@ -1,6 +1,7 @@
 #include "comms.h"
 #include "kirk.h"
 #include "sysreg.h"
+#include "syscon.h"
 
 #include <stdint.h>
 #include <string.h>
@@ -26,27 +27,13 @@
 #define HANDSHAKE_TX_STEP7  (0x86)
 #define HANDSHAKE_TX_STEP8  (0x87)
 
-static const uint8_t g_handshake_secret1[] =
-{ 
-    0x8D, 0x5D, 0xA6, 0x08, 0xF2, 0xBB, 0xC6, 0xCC,
-    0x23, 0x23, 0x23, 0x23, 0x23, 0x23, 0x23, 0x23
-};
-
-static const uint8_t g_handshake_secret2[] =
+typedef struct
 {
-    0xD5, 0x96, 0x55, 0x56, 0xB9, 0x39, 0xD8, 0x9D,
-    0x6E, 0x79, 0xD3, 0x8C, 0x88, 0x7B, 0xF3, 0x0A
-};
-
-static const uint8_t g_handshake_exp1[] =
-{
-    0x34, 0xDB, 0x81, 0x24, 0x1D, 0x6F, 0x40, 0x57
-};
-
-static const uint8_t g_handshake_exp2[] =
-{
-    0xE0, 0xDC, 0x41, 0xAF, 0xC2, 0xCD, 0x1C, 0x2D
-};
+    const uint8_t secret1[16];
+    const uint8_t secret2[16];
+    const uint8_t expected1[8];
+    const uint8_t expected2[8];
+} HandshakeSecrets;
 
 struct SysconHandshakePacket {
     unsigned char step;
@@ -152,6 +139,60 @@ static int handshake_rx_step(int step, void *dst)
     return res;
 }
 
+static const HandshakeSecrets *get_handshake_secrets(unsigned int version)
+{
+    // not every model has the handshake, and some models use different
+    // secret. return NULL when there is no handshake, and either type1
+    // (04g/07g/09g/11g) or type2 (05g) secrets
+    unsigned int model_code = BARYON_VERSION_MODEL_CODE(version);
+
+    // type1 is 04g/07g/09g/11g
+    if (BARYON_MODEL_CODE_IS_HANDSHAKE_TYPE1(model_code)) {
+        static const HandshakeSecrets type1_secrets = {
+            .secret1 = {      
+                0x8D, 0x5D, 0xA6, 0x08, 0xF2, 0xBB, 0xC6, 0xCC,
+                0x23, 0x23, 0x23, 0x23, 0x23, 0x23, 0x23, 0x23
+            },
+            .secret2 = {
+                0xD5, 0x96, 0x55, 0x56, 0xB9, 0x39, 0xD8, 0x9D,
+                0x6E, 0x79, 0xD3, 0x8C, 0x88, 0x7B, 0xF3, 0x0A
+            },
+            .expected1 = {    
+                0x34, 0xDB, 0x81, 0x24, 0x1D, 0x6F, 0x40, 0x57
+            },
+            .expected2 = {
+                0xE0, 0xDC, 0x41, 0xAF, 0xC2, 0xCD, 0x1C, 0x2D
+            }
+        };
+
+        return &type1_secrets;
+    }
+
+    // type2 is 05g
+    else if (BARYON_MODEL_CODE_IS_HANDSHAKE_TYPE2(model_code)) {
+        static const HandshakeSecrets type2_secret = {
+            .secret1 = {      
+                0x61, 0x7A, 0x56, 0x42, 0xF8, 0xED, 0xC5, 0xE4,
+                0x23, 0x23, 0x23, 0x23, 0x23, 0x23, 0x23, 0x23
+            },
+            .secret2 = {
+                0xF3, 0x58, 0x22, 0xBA, 0x99, 0x4F, 0x86, 0x93,
+                0x6A, 0xFF, 0xB7, 0x05, 0x5D, 0xDD, 0x14, 0xFC,
+            },
+            .expected1 = {
+                0xDB, 0xB1, 0x1E, 0x20, 0x48, 0x83, 0xB1, 0x6F
+            },
+            .expected2 = {
+                0x04, 0xF4, 0x69, 0x8A, 0x8C, 0xAA, 0x95, 0x30
+            }
+        };
+
+        return &type2_secret;
+    }
+
+    return NULL;
+}
+
 int syscon_handshake_unlock(void)
 {
     // we have some buffers for storing results
@@ -165,6 +206,12 @@ int syscon_handshake_unlock(void)
     // the handshake uses a random number source repeatedly. we will
     // bank it specifically here
     uint8_t rng_data[HANDSHAKE_SEED_SIZE];
+
+    // the handshake uses secrets to provide a challenge response
+    // across to syscon. annoyingly, these secrets aren't consistent
+    // and we need to determine what syscon version we are talking to
+    // and provide it the correct secrets
+    const HandshakeSecrets *secrets = get_handshake_secrets(syscon_get_baryon_version());
 
     // enable kirk hardware or reset it if it is
     // already enabled
@@ -203,7 +250,7 @@ int syscon_handshake_unlock(void)
     handshake_tx_step(HANDSHAKE_TX_STEP4, crypt_buffer0 + 8);
 
     // xor the RNG data with a shared secret
-    xor_seed(crypt_buffer1, rng_data, g_handshake_secret1);
+    xor_seed(crypt_buffer1, rng_data, secrets->secret1);
     crypt_seed(crypt_buffer0, crypt_buffer1, 0x15);
 
     // xor it again with the data from a previous crypt
@@ -214,7 +261,7 @@ int syscon_handshake_unlock(void)
     handshake_tx_step(HANDSHAKE_TX_STEP6, crypt_buffer0 + 8);
 
     // xor the random data with the second secret handshake
-    xor_seed(crypt_buffer0, rng_data, g_handshake_secret2);
+    xor_seed(crypt_buffer0, rng_data, secrets->secret2);
 
     // transmit the result to syscon
     handshake_tx_step(HANDSHAKE_TX_STEP7, crypt_buffer0);
@@ -244,11 +291,11 @@ int syscon_handshake_unlock(void)
 
     // we should have a predictable output in the first 8 bytes of each
     // response in buffer0 and buffer1
-    if (memcmp(crypt_buffer0, g_handshake_exp1, sizeof(g_handshake_exp1)) != 0)
+    if (memcmp(crypt_buffer0, secrets->expected1, sizeof(secrets->expected1)) != 0)
     {
         return -1;
     }
-    else if (memcmp(crypt_buffer1, g_handshake_exp2, sizeof(g_handshake_exp2)) != 0)
+    else if (memcmp(crypt_buffer1, secrets->expected2, sizeof(secrets->expected2)) != 0)
     {
         return -2;
     }

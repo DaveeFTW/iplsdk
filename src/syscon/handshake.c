@@ -213,6 +213,12 @@ int syscon_handshake_unlock(void)
     // and provide it the correct secrets
     const HandshakeSecrets *secrets = get_handshake_secrets(syscon_get_baryon_version());
 
+    // a NULL value means that there is no handshake for the device
+    // that is currently running.
+    if (!secrets) {
+        return 1;
+    }
+
     // enable kirk hardware or reset it if it is
     // already enabled
     kirk_hwreset();

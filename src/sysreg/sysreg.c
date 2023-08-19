@@ -119,6 +119,8 @@ enum ResetDevice
 
 #define SYSREG_RESET_REG   (REG32(0xBC10004C))
 #define SYSREG_BUSCLK_REG  (REG32(0xBC100050))
+#define SYSREG_CLK_REG     (REG32(0xBC100054))
+#define SYSREG_IOEN_REG    (REG32(0xBC100078))
 
 void sysreg_reset_enable(uint32_t devices)
 {
@@ -138,4 +140,24 @@ void sysreg_busclk_enable(uint32_t devices)
 void sysreg_busclk_disable(uint32_t devices)
 {
     *SYSREG_BUSCLK_REG &= ~devices;
+}
+
+void sysreg_clk_enable(uint32_t devices)
+{
+    *SYSREG_CLK_REG |= devices;
+}
+
+void sysreg_clk_disable(uint32_t devices)
+{
+    *SYSREG_CLK_REG &= ~devices;
+}
+
+void sysreg_io_enable(uint32_t devices)
+{
+    *SYSREG_IOEN_REG |= devices;
+}
+
+void sysreg_io_disable(uint32_t devices)
+{
+    *SYSREG_IOEN_REG &= ~devices;
 }

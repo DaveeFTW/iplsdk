@@ -1,0 +1,4 @@
+[{
+    "name": "iplsdk",
+    "toolchainFile": "/usr/local/pspdev/share/psp-toolchain.cmake"
+}]

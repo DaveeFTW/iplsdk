@@ -4,16 +4,21 @@
 extern "C" {
 #endif //__cplusplus
 
-#define UART_UART4      (3)
-#define UART_HPREMOTE   (4)
-#define UART_IRDA       (5)
+enum UartDevice
+{
+    UART_UART1 = 0,
+    UART_UART2,
+    UART_UART3,
+    UART_UART4,
+    UART_HPREMOTE,
+    UART_IRDA
+};
 
-int uart_init(int port);
-int uart_putc(int port, char c);
-int uart_getc(int port);
-int uart_flush_tx(int port);
-int uart_flush_rx(int port);
-void uart_puts(int port, const char *s);
+void uart_init(enum UartDevice device, unsigned int baudrate);
+void uart_putc(enum UartDevice device, char c);
+int uart_getc(enum UartDevice device);
+void uart_puts(enum UartDevice device, const char *s);
+void uart_flush_tx(enum UartDevice device);
 
 #ifdef __cplusplus
 }

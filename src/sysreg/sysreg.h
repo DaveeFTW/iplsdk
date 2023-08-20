@@ -48,16 +48,42 @@ void sysreg_busclk_enable(uint32_t devices);
 void sysreg_busclk_disable(uint32_t devices);
 
 // device clock bits
-#define CLK_ATA         (1 << 0)
-#define CLK_ATAHDD      (1 << 1)
-#define CLK_USB         (1 << 2)
-#define CLK_MSPRO0      (1 << 8)
-#define CLK_MSPRO1      (1 << 9)
-#define CLK_EMCDDR      (1 << 12)
-#define CLK_USBHOST     (1 << 16)
+#define CLK1_ATA         (1 << 0)
+#define CLK1_ATAHDD      (1 << 1)
+#define CLK1_USB         (1 << 2)
+#define CLK1_MSPRO0      (1 << 8)
+#define CLK1_MSPRO1      (1 << 9)
+#define CLK1_EMCDDR      (1 << 12)
+#define CLK1_USBHOST     (1 << 16)
+#define CLK2_SPI0        (1 << 0)
+#define CLK2_SPI1        (1 << 1)
+#define CLK2_SPI2        (1 << 2)
+#define CLK2_SPI3        (1 << 3)
+#define CLK2_SPI4        (1 << 4)
+#define CLK2_SPI5        (1 << 5)
+#define CLK2_UART0       (1 << 6)
+#define CLK2_UART1       (1 << 7)
+#define CLK2_UART2       (1 << 8)
+#define CLK2_UART3       (1 << 9)
+#define CLK2_UART4       (1 << 10)
+#define CLK2_UART5       (1 << 11)
+#define CLK2_APB_TIMER0  (1 << 12)
+#define CLK2_APB_TIMER1  (1 << 13)
+#define CLK2_APB_TIMER2  (1 << 14)
+#define CLK2_APB_TIMER3  (1 << 15)
+#define CLK2_AUDIO0      (1 << 16)
+#define CLK2_AUDIO1      (1 << 17)
+#define CLK2_LCDCTRL     (1 << 18)
+#define CLK2_PWM         (1 << 19)
+#define CLK2_I2C         (1 << 21)
+#define CLK2_SIRCS       (1 << 22)
+#define CLK2_GPIO        (1 << 23)
+#define CLK2_AUDIOCLKOUT (1 << 24)
 
-void sysreg_clk_enable(uint32_t devices);
-void sysreg_clk_disable(uint32_t devices);
+void sysreg_clk1_enable(uint32_t devices);
+void sysreg_clk1_disable(uint32_t devices);
+void sysreg_clk2_enable(uint32_t devices);
+void sysreg_clk2_disable(uint32_t devices);
 
 // device IO bits
 #define IO_EMCSM        (1 << 1)

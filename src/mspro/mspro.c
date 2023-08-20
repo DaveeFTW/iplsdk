@@ -221,7 +221,7 @@ int mspro_init(void)
     // enable the memory card hardware
     sysreg_reset_enable(RESET_MSPRO0);
     sysreg_busclk_enable(BUSCLK_MSPRO0);
-    sysreg_clk_enable(CLK_MSPRO0);
+    sysreg_clk1_enable(CLK1_MSPRO0);
     sysreg_io_enable(IO_MSIF0);
     sysreg_reset_disable(RESET_MSPRO0);
 

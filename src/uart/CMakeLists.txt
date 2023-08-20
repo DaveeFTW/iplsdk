@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 2.8.12)
 project(uart C ASM)
 
 add_library(uart STATIC uart.c uart.h)
+target_link_libraries(uart sysreg)
 
 target_include_directories(uart
     PUBLIC

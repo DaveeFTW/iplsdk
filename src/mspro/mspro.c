@@ -156,7 +156,7 @@ static void write_data(const void *src, size_t len)
             if (copylen > 0) {
                 memcpy(&data[i], src, copylen);
                 len -= copylen;
-                src = (void *)((uintptr_t)src + len);
+                src = (void *)((uintptr_t)src + copylen);
             }
         }
 

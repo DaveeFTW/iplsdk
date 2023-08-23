@@ -40,23 +40,17 @@ int kirk1(void *dst, const void *src)
     kirk->src_addr = MAKE_PHYS_ADDR(src);
     kirk->dst_addr = MAKE_PHYS_ADDR(dst);
  
+    // begin processing
+    kirk->proc_phase = 1;
     SYNC();
-    kirk->proc_phase = 1; // start processing
- 
-    while((kirk->status & 0x11) == 0); // wait until processing complete
- 
-    if (kirk->status & 0x10) // error occured
-    {
-        kirk->proc_phase = 2;
- 
-        while((kirk->status & 2) == 0);
- 
-        kirk->status_end = kirk->status;
-        SYNC();
-        return -1;
-    }
- 
-    kirk->status_end = kirk->status;
+
+    // wait until we advance from the initial phase
+    while ((kirk->proc_phase & 1) != 0);
+
+    // wait until status is set
+    while (kirk->status == 0);
+
+    kirk->status_end = kirk->status & kirk->status_async;
     SYNC();
     return kirk->result;
 }
@@ -69,24 +63,18 @@ int kirk4(void *dst, const void *src)
     kirk->command = 4; // encrypt operation
     kirk->src_addr = MAKE_PHYS_ADDR(src);
     kirk->dst_addr = MAKE_PHYS_ADDR(dst);
- 
+
+    // begin processing
+    kirk->proc_phase = 1;
     SYNC();
-    kirk->proc_phase = 1; // start processing
- 
-    while((kirk->status & 0x11) == 0); // wait until processing complete
- 
-    if (kirk->status & 0x10) // error occured
-    {
-        kirk->proc_phase = 2;
- 
-        while((kirk->status & 2) == 0);
- 
-        kirk->status_end = kirk->status;
-        SYNC();
-        return -1;
-    }
- 
-    kirk->status_end = kirk->status;
+
+    // wait until we advance from the initial phase
+    while ((kirk->proc_phase & 1) != 0);
+
+    // wait until status is set
+    while (kirk->status == 0);
+
+    kirk->status_end = kirk->status & kirk->status_async;
     SYNC();
     return kirk->result;
 }

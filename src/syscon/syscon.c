@@ -97,5 +97,5 @@ int syscon_ctrl_hr_power(unsigned int on)
     unsigned char on_val = on;
 
     // write message directly to syscon
-    syscon_issue_command_write(SYSCON_CTRL_HR_POWER, &on_val, 1);
+    return syscon_issue_command_write(SYSCON_CTRL_HR_POWER, &on_val, 1);
 }

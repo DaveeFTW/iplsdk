@@ -51,7 +51,7 @@ static inline void set_interrupt_masks(uint32_t *interrupts)
 {
     *INTERRUPT_CTRL0_MASK_REG = interrupts[0] | ALWAYS_ENABLED_INTERRUPTS;
     *INTERRUPT_CTRL1_MASK_REG = interrupts[1] & ~(INTR_MASK(IRQ_UNK38) | INTR_MASK(IRQ_UNK39));
-    *INTERRUPT_CTRL2_MASK_REG = (interrupts[2] & (INTR_MASK(IRQ_UNK38) | INTR_MASK(IRQ_UNK39))) >> 6;
+    *INTERRUPT_CTRL2_MASK_REG = (interrupts[1] & (INTR_MASK(IRQ_UNK38) | INTR_MASK(IRQ_UNK39))) >> 6;
     sync();
 }
 

@@ -70,10 +70,25 @@ enum InterruptType
     IRQ_MS_INSERT1,
     IRQ_UNK_WLAN0,
     IRQ_UNK_WLAN1,
+    IRQ_MAXIMUM_COUNT
 };
+
+enum IrqHandleStatus
+{
+    IRQ_HANDLE_OK,
+};
+
+typedef enum IrqHandleStatus (* IrqHandlerFunction)(void);
+
+typedef struct 
+{
+    IrqHandlerFunction handler;
+} IrqHandler;
 
 void interrupt_init(void);
 void interrupt_enable(enum InterruptType interrupt);
+void interrupt_set_handler(enum InterruptType type, IrqHandlerFunction handler);
+void interrupt_dispatch(void);
 
 int interrupt_occured(enum InterruptType interrupt);
 void interrupt_clear(enum InterruptType interrupt);

@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 2.8.12)
 project(interrupt ASM)
 
 add_library(interrupt STATIC interrupt.c interrupt.S interrupt.h)
+target_link_libraries(interrupt cpu)
 
 target_include_directories(interrupt
     PUBLIC

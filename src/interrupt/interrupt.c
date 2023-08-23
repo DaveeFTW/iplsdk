@@ -1,5 +1,8 @@
 #include "interrupt.h"
 
+#include <cpu.h>
+
+#include <stddef.h>
 #include <stdint.h>
 
 #define REG32(addr)                         ((volatile uintptr_t *)(addr))
@@ -21,10 +24,7 @@
 
 #define ALWAYS_ENABLED_INTERRUPTS           (INTR_MASK(IRQ_ALL_UART) | INTR_MASK(IRQ_ALL_SPI) | INTR_MASK(IRQ_ALL_TIMERS) | INTR_MASK(IRQ_ALL_USB) | INTR_MASK(IRQ_UNK29))
 
-static inline void sync(void)
-{
-    __asm("sync");
-}
+static IrqHandler g_irq_handlers[IRQ_MAXIMUM_COUNT] = { 0 };
 
 static inline uint32_t *enabled_interrupts(void)
 {
@@ -52,7 +52,7 @@ static inline void set_interrupt_masks(uint32_t *interrupts)
     *INTERRUPT_CTRL0_MASK_REG = interrupts[0] | ALWAYS_ENABLED_INTERRUPTS;
     *INTERRUPT_CTRL1_MASK_REG = interrupts[1] & ~(INTR_MASK(IRQ_UNK38) | INTR_MASK(IRQ_UNK39));
     *INTERRUPT_CTRL2_MASK_REG = (interrupts[1] & (INTR_MASK(IRQ_UNK38) | INTR_MASK(IRQ_UNK39))) >> 6;
-    sync();
+    cpu_sync();
 }
 
 void interrupt_init(void)
@@ -67,7 +67,6 @@ void interrupt_init(void)
 void interrupt_enable(enum InterruptType interrupt)
 {
     uint32_t mask = interrupt_suspend();
-
     uint32_t *interrupts = enabled_interrupts();
     interrupts[interrupt/32] = (1 << (interrupt % 32));
     set_interrupt_masks(interrupts);
@@ -101,5 +100,43 @@ void interrupt_clear(enum InterruptType interrupt)
     
     else { // if (is_ctrl2_interrupt(interrupt)) {
         *INTERRUPT_CTRL2_UNMASKED_FLAGS_REG = (INTR_MASK(interrupt) >> 6);
+    }
+}
+
+void interrupt_set_handler(enum InterruptType irq, IrqHandlerFunction handler)
+{
+    if ((unsigned int)irq < IRQ_MAXIMUM_COUNT) {
+        g_irq_handlers[irq].handler = handler;
+    }
+}
+
+void interrupt_dispatch(void)
+{
+    uint32_t *irqs = enabled_interrupts();
+    uint32_t ctrl0_irqs = *INTERRUPT_CTRL0_UNMASKED_FLAGS_REG & irqs[0];
+    
+    // TODO: represent this better. what a fucking mess
+    uint32_t ctrl1_irqs = ((*INTERRUPT_CTRL1_UNMASKED_FLAGS_REG & ~(INTR_MASK(IRQ_UNK38) | INTR_MASK(IRQ_UNK39))) | ((*INTERRUPT_CTRL2_UNMASKED_FLAGS_REG << 6) & (INTR_MASK(IRQ_UNK38) | INTR_MASK(IRQ_UNK39)))) * irqs[1];
+
+    unsigned int irq_num = 0;
+
+    if (ctrl0_irqs) {
+        irq_num = cpu_clz(cpu_bitrev(ctrl0_irqs));
+    }
+    else if (ctrl1_irqs) {
+        irq_num = cpu_clz(cpu_bitrev(ctrl0_irqs)) + 32;
+    }
+    else {
+        // not our interrupt?
+        return;
+    }
+
+    // no handler? nothing to do
+    if (!g_irq_handlers[irq_num].handler) {
+        return;
+    }
+
+    if (g_irq_handlers[irq_num].handler() == IRQ_HANDLE_OK) {
+        interrupt_clear(irq_num);
     }
 }

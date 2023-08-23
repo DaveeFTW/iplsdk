@@ -7,6 +7,7 @@
 #define UART_DEVICE_TO_MMIO(x)  ((uintptr_t)UART_IO_BASE + ((uintptr_t)x*0x40000))
 
 #define UARTCLK                 (192000000) // 192 MHz
+#define UARTCLK_2               (1536000000) // 1.5 GHz???
 
 static void init_hardware(enum UartDevice device)
 {
@@ -49,8 +50,8 @@ void uart_init(enum UartDevice device, unsigned int baudrate)
     uintptr_t mmio_base = UART_DEVICE_TO_MMIO(device);
 
     // calculate the baud rate divisor integer and fractional
-    // parts. the UARTCLK is 192 MHz
-    unsigned int bauddiv = UARTCLK/(16*baudrate);
+    // parts. the UARTCLK is 192 MHz or 1.53 GHz? UART4/HPREMOTE difference?
+    unsigned int bauddiv = UARTCLK_2/(16*baudrate);
     unsigned int ibrd = bauddiv / 64;
     unsigned int fbrd = bauddiv % 64;
 

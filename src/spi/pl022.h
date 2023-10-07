@@ -79,6 +79,14 @@ static uint32_t pl022_sspsr_read(uintptr_t base)
     return *REG32(base + PL022_SR_OFFSET);
 }
 
+// SSPCPSR Clock Prescale Register
+#define PL022_CP_OFFSET             (0x010)
+
+static void pl022_sspcpsr_write(uintptr_t base, uint32_t cp)
+{
+    *REG32(base + PL022_CP_OFFSET) = cp;
+}
+
 // SSPICR Interrupt Clear Register
 #define PL022_ICR_OFFSET            (0x020)
 #define ICR_RTIC                    (1 << 1)

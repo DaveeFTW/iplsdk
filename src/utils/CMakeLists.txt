@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.12)
 
 project(utils C ASM)
 
-add_library(utils STATIC utils.c utils.h)
+add_library(utils STATIC utils.c delay.S utils.h)
 
 target_include_directories(utils
     PUBLIC

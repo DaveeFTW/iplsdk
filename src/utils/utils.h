@@ -4,10 +4,7 @@
 extern "C" {
 #endif //__cplusplus
 
-void clear_dcache(void);
-void clear_icache(void);
-
-unsigned int delay_us(unsigned int usec);
+void util_delay_cpu222_us(unsigned int usec);
 
 #define _wsbh(x) __extension__({ \
     unsigned int __x = (x), __v; \

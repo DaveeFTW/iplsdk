@@ -208,6 +208,13 @@ static void mspro_tpc_read_long_data(void *dst)
     mspro_wait_for_ready();
 }
 
+static void mspro_tpc_write_long_data(const void *src)
+{
+    send_tpc(CR_TPC_WR_LDATA, MS_SECTOR_SIZE);
+    write_data(src, MS_SECTOR_SIZE);
+    mspro_wait_for_ready();
+}
+
 static void mspro_reset(void)
 {
     // reset the controller. it will automatically
@@ -274,6 +281,34 @@ int mspro_read_sector(uint32_t sector, void *data)
 
     // read the sector data into the provided buffer
     mspro_tpc_read_long_data(data);
+
+    // wait for the command to complete
+    res = wait_interrupt_satifised(INT_REG_CED);
+
+    // if there is an error reading the sector then we cannot continue
+    if (res < 0) {
+        return res;
+    }
+
+    return 0;
+}
+
+int mspro_write_sector(uint32_t sector, const void *data)
+{
+    // issue a command for the memory card interface to read a sector.
+    // we don't have a fancy driver here so serial only.
+    mspro_tpc_ex_set_cmd(EX_SET_CMD_WRITE_DATA, sector, 1);
+    
+    // wait for the data buffer request to be satifised
+    int res = wait_interrupt_satifised(INT_REG_BREQ);
+
+    // if there is an error requesting the sector then we cannot continue
+    if (res < 0) {
+        return res;
+    }
+
+    // write the sector data to the device
+    mspro_tpc_write_long_data(data);
 
     // wait for the command to complete
     res = wait_interrupt_satifised(INT_REG_CED);

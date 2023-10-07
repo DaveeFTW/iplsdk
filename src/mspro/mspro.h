@@ -10,6 +10,7 @@ extern "C" {
 
 int mspro_init(void);
 int mspro_read_sector(uint32_t sector, void *data);
+int mspro_write_sector(uint32_t sector, const void *data);
 
 #ifdef __cplusplus
 }

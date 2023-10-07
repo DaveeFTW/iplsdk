@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 2.8.12)
 project(sysreg C)
 
 add_library(sysreg STATIC sysreg.c sysreg.h)
+target_link_libraries(sysreg interrupt)
 
 target_include_directories(sysreg
     PUBLIC

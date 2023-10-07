@@ -1,4 +1,5 @@
 #include "sysreg.h"
+#include "interrupt.h"
 
 #include <stdint.h>
 
@@ -117,11 +118,12 @@ enum ResetDevice
     KIRK = 10
 };
 
-#define SYSREG_RESET_REG   (REG32(0xBC10004C))
-#define SYSREG_BUSCLK_REG  (REG32(0xBC100050))
-#define SYSREG_CLK1_REG    (REG32(0xBC100054))
-#define SYSREG_CLK2_REG    (REG32(0xBC100058))
-#define SYSREG_IOEN_REG    (REG32(0xBC100078))
+#define SYSREG_CONFIG_REG   (REG32(0xBC100040))
+#define SYSREG_RESET_REG    (REG32(0xBC10004C))
+#define SYSREG_BUSCLK_REG   (REG32(0xBC100050))
+#define SYSREG_CLK1_REG     (REG32(0xBC100054))
+#define SYSREG_CLK2_REG     (REG32(0xBC100058))
+#define SYSREG_IOEN_REG     (REG32(0xBC100078))
 
 void sysreg_reset_enable(uint32_t devices)
 {
@@ -171,4 +173,25 @@ void sysreg_io_enable(uint32_t devices)
 void sysreg_io_disable(uint32_t devices)
 {
     *SYSREG_IOEN_REG &= ~devices;
+}
+
+uint32_t sysreg_get_tachyon_version(void)
+{
+    static uint32_t s_tachyon_version = -1;
+
+    if (s_tachyon_version == -1) {
+        uint32_t mask = interrupt_suspend();
+        uint32_t cfg = *SYSREG_CONFIG_REG;
+
+        if ((cfg & 0xFF000000) != 0) {
+            s_tachyon_version = (cfg & 0xFF000000) >> 8;
+        }
+        else {
+            s_tachyon_version = 0x100000;
+        }
+
+        interrupt_resume(mask);
+    }
+
+    return s_tachyon_version;
 }

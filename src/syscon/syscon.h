@@ -15,9 +15,21 @@ int syscon_init(void);
 
 unsigned int syscon_get_baryon_version(void);
 
-int syscon_ctrl_led(unsigned int led, unsigned int on);
+int syscon_ctrl_power(unsigned int dev, unsigned int arg);
+
+typedef enum {
+    SYSCON_LED_MS,
+    SYSCON_LED_WLAN,
+    SYSCON_LED_POWER,
+    SYSCON_LED_BT
+} SysconLed;
+
+int syscon_ctrl_led(SysconLed led, unsigned int on);
 int syscon_ctrl_hr_power(unsigned int on);
 int syscon_handshake_unlock(void);
+int syscon_get_pommel_version(unsigned int *version);
+int syscon_get_power_status(unsigned int *status);
+int syscon_ctrl_voltage(unsigned int a0, unsigned int a1);
 
 #ifdef __cplusplus
 }

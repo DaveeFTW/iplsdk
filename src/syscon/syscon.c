@@ -1,3 +1,4 @@
+#include "syscon.h"
 #include "comms.h"
 #include "gpio.h"
 #include "sysreg.h"
@@ -50,26 +51,31 @@ unsigned int syscon_get_baryon_version(void)
     return g_baryon_version;
 }
 
-int syscon_ctrl_led(unsigned int led, unsigned int on)
+int syscon_ctrl_power(unsigned int dev, unsigned int on)
+{
+    uint32_t device = ((on & 1) << 23) | (dev & 0x003FFFFF);
+    return syscon_issue_command_write(SYSCON_CTRL_POWER, (unsigned char *)&device, 3);
+}
+
+int syscon_ctrl_led(SysconLed led, unsigned int on)
 {
     unsigned char led_cmd = 0;
 
     // get the bit that represents the LED we're interested in
     switch (led) {
-        // memory stick
-        case 0:
+        case SYSCON_LED_MS:
             led_cmd = 0x40;
             break;
-        // wlan
-        case 1:
+
+        case SYSCON_LED_WLAN:
             led_cmd = 0x80;
             break;
-        // power
-        case 2:
+
+        case SYSCON_LED_POWER:
             led_cmd = 0x20;
             break;
-        // bluetooth
-        case 3:
+
+        case SYSCON_LED_BT:
             // TODO: check pommel type. error if < 0x300
             led_cmd = 0x10;
             break;
@@ -98,4 +104,20 @@ int syscon_ctrl_hr_power(unsigned int on)
 
     // write message directly to syscon
     return syscon_issue_command_write(SYSCON_CTRL_HR_POWER, &on_val, 1);
+}
+
+int syscon_get_pommel_version(unsigned int *version)
+{
+    return syscon_issue_command_read(SYSCON_GET_POMMEL_VERSION, (unsigned char *)version);
+}
+
+int syscon_get_power_status(unsigned int *status)
+{
+    return syscon_issue_command_read(SYSCON_GET_POWER_STATUS, (unsigned char *)status);
+}
+
+int syscon_ctrl_voltage(unsigned int a0, unsigned int a1)
+{
+    uint32_t val = ((a0 & 0xFFFF) << 8) | (a1 & 0xFF);
+    return syscon_issue_command_write(SYSCON_CTRL_VOLTAGE, (unsigned char *)&val, 3);
 }

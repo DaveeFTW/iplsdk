@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.8.12)
 project(gpio C)
 
 add_library(gpio STATIC gpio.c gpio.h)
-target_link_libraries(gpio sysreg)
+target_link_libraries(gpio sysreg cpu)
 
 target_include_directories(gpio
     PUBLIC

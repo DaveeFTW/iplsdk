@@ -17,7 +17,8 @@ enum Ports
     GPIO_PORT_DEBUG_8,
     GPIO_PORT_LEPTON_STATUS,
     GPIO_PORT_LEPTON_WAKE,
-    GPIO_PORT_UMD_STATUS
+    GPIO_PORT_UMD_STATUS,
+    GPIO_PORT_BT_LED = 24,
 };
 
 enum PortMode
@@ -26,6 +27,7 @@ enum PortMode
     GPIO_MODE_INPUT,
 };
 
+void gpio_init(void);
 void gpio_set_port_mode(int port, enum PortMode mode);
 void gpio_set(int port);
 void gpio_clear(int port);

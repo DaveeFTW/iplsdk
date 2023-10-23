@@ -6,7 +6,7 @@ check_ipo_supported(RESULT supported OUTPUT error)
 project(interrupt ASM)
 
 add_library(interrupt STATIC interrupt.c interrupt.S interrupt.h)
-target_link_libraries(interrupt cpu)
+target_link_libraries(interrupt exception cpu)
 
 target_include_directories(interrupt
     PUBLIC

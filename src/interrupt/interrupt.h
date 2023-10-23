@@ -80,15 +80,9 @@ enum IrqHandleStatus
 
 typedef enum IrqHandleStatus (* IrqHandlerFunction)(void);
 
-typedef struct 
-{
-    IrqHandlerFunction handler;
-} IrqHandler;
-
 void interrupt_init(void);
 void interrupt_enable(enum InterruptType interrupt);
 void interrupt_set_handler(enum InterruptType type, IrqHandlerFunction handler);
-void interrupt_dispatch(void);
 
 int interrupt_occured(enum InterruptType interrupt);
 void interrupt_clear(enum InterruptType interrupt);

@@ -5,7 +5,8 @@ check_ipo_supported(RESULT supported OUTPUT error)
 
 project(exception ASM)
 
-add_library(exception STATIC exception.c exception.S exception.h)
+add_library(exception STATIC exception.c exception.S ebasehandler.S exception.h)
+target_link_libraries(exception cpu)
 
 target_include_directories(exception
     PUBLIC

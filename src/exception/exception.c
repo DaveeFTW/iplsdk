@@ -1,4 +1,18 @@
 #include "exception.h"
+#include "ebasehandler.h"
+
+#include <cpu.h>
+
+#include <string.h>
+
+static void inf_loop(unsigned int cause, unsigned int epc, unsigned int bad_vaddr, struct Registers *ctx)
+{
+    while (1);
+}
+
+static EXCEPTION_HANDLER *g_irq_exception_handler = inf_loop;
+static EXCEPTION_HANDLER *g_syscall_exception_handler = inf_loop;
+static EXCEPTION_HANDLER *g_default_exception_handler = inf_loop;
 
 static const char *g_exceptionCause[32] = 
 {
@@ -20,4 +34,50 @@ const char *exception_get_cause_string(int cause)
 enum ExceptionType exception_get_cause(int cause)
 {
     return (cause >> 2) & 0xF;
+}
+
+void exception_handler(unsigned int cause, unsigned int epc, unsigned int bad_vaddr, struct Registers *ctx)
+{
+    switch (exception_get_cause(cause)) {
+        case EXCEPTION_IRQ:
+            g_irq_exception_handler(cause, epc, bad_vaddr, ctx);
+            break;
+
+        
+        case EXCEPTION_SYSCALL:
+            g_syscall_exception_handler(cause, epc, bad_vaddr, ctx);
+            break;
+
+        default:
+            g_default_exception_handler(cause, epc, bad_vaddr, ctx);
+            break;
+    }
+}
+
+void exception_register_handler(enum ExceptionType cause, EXCEPTION_HANDLER *handler)
+{
+    switch (cause) {
+        case EXCEPTION_IRQ:
+            g_irq_exception_handler = handler;
+            break;
+
+        
+        case EXCEPTION_SYSCALL:
+            g_syscall_exception_handler = handler;
+            break;
+    }
+}
+
+void exception_register_default_handler(EXCEPTION_HANDLER *handler)
+{
+    g_default_exception_handler = handler;
+}
+
+void exception_init(void)
+{
+	memcpy((void *)0xBFC00000, ebase_handler, ebase_handler_size);
+	cpu_dcache_wb_inv_all();
+	cpu_icache_inv_all();
+
+	exception_register_ebase_handler(ebase_handler);
 }

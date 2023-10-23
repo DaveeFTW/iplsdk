@@ -121,3 +121,8 @@ int syscon_ctrl_voltage(unsigned int a0, unsigned int a1)
     uint32_t val = ((a0 & 0xFFFF) << 8) | (a1 & 0xFF);
     return syscon_issue_command_write(SYSCON_CTRL_VOLTAGE, (unsigned char *)&val, 3);
 }
+
+int syscon_get_digital_key(unsigned int *keys)
+{
+    return syscon_issue_command_read(SYSCON_GET_DIGITAL_KEY_KERNEL, (unsigned char *)keys);
+}

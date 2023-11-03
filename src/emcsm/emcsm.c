@@ -198,7 +198,7 @@ static int dma_start_write(int flags, size_t ppn, const void *user_src, const vo
         uint32_t ecc = 0xFFFFFFFF;
         if (flags & USER_ECC_IN_SPARE) {
             uint8_t *spare_src8 = (uint8_t *)spare_src;
-            ecc = (spare_src8[2] << 16) | (spare_src8[1] << 8) | spare_src8[0];
+            ecc = ((uint32_t)spare_src8[2] << 16) | ((uint32_t)spare_src8[1] << 8) | (uint32_t)spare_src8[0];
         }
 
         // TODO: constants!
@@ -222,7 +222,7 @@ static int dma_start_write(int flags, size_t ppn, const void *user_src, const vo
 
         // if we don't want ECC to be automatically calculated then we
         // must do it ourselves
-        if ((flags & NO_AUTO_USER_ECC) == 0) {
+        if ((flags & NO_AUTO_SPARE_ECC) == 0) {
             user_ecc = 0xFFFFF000 | calculate_ecc(spare_src32);
         }
 
@@ -388,6 +388,7 @@ static int on_interrupt(void)
             break;
 
         case PROCESS_STATE_WRITE_READY:
+            g_emcsm_state.access_state.status |= *EMCSM_DMA_STATUS_REG ? 1 : 0;
             g_emcsm_state.access_state.ppn += 1;
 
             if (g_emcsm_state.access_state.user_dst) {
@@ -470,7 +471,7 @@ static enum EmcSmError read_access(size_t ppn, void *user, void *spare, size_t l
         *EMCSM_DMA_INTERRUPT_REG &= ~0x203;
 
         if (!is_ready()) {
-            g_emcsm_state.state = 1;
+            g_emcsm_state.state = PROCESS_STATE_READ_BUSY;
             goto poll_state;
         }
         else {
@@ -478,7 +479,7 @@ static enum EmcSmError read_access(size_t ppn, void *user, void *spare, size_t l
         }
     }
 
-    g_emcsm_state.state = PROCESS_STATE_READ_BUSY;
+    g_emcsm_state.state = PROCESS_STATE_READ_READY;
 
     if (flags & NO_AUTO_USER_ECC) {
         *EMCSM_CONTROL_REG &= ~0x10000;
@@ -499,7 +500,7 @@ poll_state:
 
         // presumably this is some completion state check
         // TODO: look into this a bit more
-        if ((intr >> 8 & intr & 3) != 0) {
+        if (((intr >> 8) & intr & 3) != 0) {
             on_interrupt();
         }
     }
@@ -666,7 +667,7 @@ poll_state:
 
         // presumably this is some completion state check
         // TODO: look into this a bit more
-        if ((intr >> 8 & intr & 3) != 0) {
+        if (((intr >> 8) & intr & 3) != 0) {
             on_interrupt();
         }
     }
@@ -734,8 +735,9 @@ int emc_verify_block_with_retry(size_t ppn, const void *user, const void *spare)
             }
 
             if (spare) {
+                // only check the spare data up to the ECC value
                 uint8_t *spare8 = (uint8_t *)spare + page_offset * sizeof(EmcSmBlockMetadata);
-                if (memcmp(&spare_data, spare8, sizeof(EmcSmBlockMetadata)) != 0) {
+                if (memcmp(&spare_data, spare8, sizeof(EmcSmBlockMetadata) - 4) != 0) {
                     return -3;
                 }
             }

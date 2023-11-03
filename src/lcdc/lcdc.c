@@ -406,7 +406,7 @@ void lcdc_init(void)
 
     sysreg_clk2_disable(CLK2_LCDCTRL);
     unsigned char *clk = g_displayModes[g_lcdc_config.mode.id].clk;
-    sysreg_clk_select_lcdc(clk[0], 1);
+    sysreg_clk_select_lcdc(clk[0], clk[1]);
     sysreg_clk2_enable(CLK2_LCDCTRL);
 
     *LCDC_CONTROL_REG(g_lcdc_config.mmio_base) |= 3;

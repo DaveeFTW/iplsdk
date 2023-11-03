@@ -160,7 +160,7 @@ static SequenceCommand g_seq_init[] = {
 };
 
 static SequenceCommand g_seq_tcomdc[] = {
-    { SEQ_CMD_DRIVER_SINGLE_REG,         0x26, 0x60 },
+    { SEQ_CMD_DRIVER_SINGLE_REG,         0x26, 0x6B },
     { SEQ_CMD_TERM,                      0x00, 0x00 }
 };
 
@@ -182,17 +182,18 @@ static SequenceCommand g_seq_display_on[] = {
 };
 
 static SequenceCommand g_seq_backlight_on[] = {
-    { SEQ_CMD_CONTROLLER_SINGLE_REG,     0x2E, 0x37 },
-    { SEQ_CMD_CONTROLLER_SINGLE_REG,     0x32, 0x8F },
-    { SEQ_CMD_CONTROLLER_SINGLE_REG,     0x2F, 0x00 },
-    { SEQ_CMD_CONTROLLER_SINGLE_REG,     0x30, 0x00 },
-    { SEQ_CMD_CONTROLLER_SINGLE_REG,     0x31, 0x00 },
-    { SEQ_CMD_CONTROLLER_SINGLE_REG,     0x33, 0x43 },
-    { SEQ_CMD_CONTROLLER_SINGLE_REG,     0x34, 0x01 },
-    { SEQ_CMD_MODIFY_FLAG,               0x00, 0x01 },
-    { SEQ_CMD_WAIT_DELAY,                0x01, 0x00 },
-    { SEQ_CMD_CONTROLLER_SINGLE_REG,     0x2D, 0x01 },
-    { SEQ_CMD_TERM,                      0x00, 0x11 }
+{ SEQ_CMD_MODIFY_FLAG,               0x00, 0x00 },
+{ SEQ_CMD_WAIT_DELAY,                0x01, 0x00 },
+{ SEQ_CMD_CONTROLLER_SINGLE_REG,     0x32, 0x8F },
+{ SEQ_CMD_CONTROLLER_SINGLE_REG,     0x2F, 0x00 },
+{ SEQ_CMD_CONTROLLER_SINGLE_REG,     0x30, 0x00 },
+{ SEQ_CMD_CONTROLLER_SINGLE_REG,     0x31, 0x00 },
+{ SEQ_CMD_CONTROLLER_SINGLE_REG,     0x33, 0x43 },
+{ SEQ_CMD_CONTROLLER_SINGLE_REG,     0x34, 0x01 },
+{ SEQ_CMD_CONTROLLER_SINGLE_REG,     0x2E, 0x01 },
+{ SEQ_CMD_WAIT_DELAY,                0x01, 0x00 },
+{ SEQ_CMD_CONTROLLER_SINGLE_REG,     0x2D, 0x01 },
+{ SEQ_CMD_TERM,                      0x00, 0x00 }
 };
 
 static TmdLcdState *tmdlcd_state(void)

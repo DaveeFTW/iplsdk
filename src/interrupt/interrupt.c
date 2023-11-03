@@ -150,6 +150,7 @@ void interrupt_set_handler(enum InterruptType irq, IrqHandlerFunction handler)
         for (size_t i = 0; i < NUM_IRQ_HANDLERS; ++i) {
             if (!g_irq_handlers[irq][i]) {
                 g_irq_handlers[irq][i] = handler;
+                break;
             }
         }
     }

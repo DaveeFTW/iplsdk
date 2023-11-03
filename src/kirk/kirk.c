@@ -85,7 +85,7 @@ int kirk7(void *dst, const void *src)
     PspKirkRegs *const kirk = KIRK_HW_REGISTER_ADDR;
 
     kirk->command = 7; // decryption
-    kirk->src_addr = MAKE_PHYS_ADDR(dst);
+    kirk->src_addr = MAKE_PHYS_ADDR(src);
     kirk->dst_addr = MAKE_PHYS_ADDR(dst);
 
     // begin processing

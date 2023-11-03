@@ -6,7 +6,7 @@ check_ipo_supported(RESULT supported OUTPUT error)
 project(led C)
 
 add_library(led STATIC led.c led.h)
-target_link_libraries(led model syscon gpio sysreg cpu)
+target_link_libraries(led interrupt model syscon gpio sysreg cpu)
 
 target_include_directories(led
     PUBLIC

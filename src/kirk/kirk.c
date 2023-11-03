@@ -79,6 +79,30 @@ int kirk4(void *dst, const void *src)
     return kirk->result;
 }
 
+int kirk5(void *dst, const void *src)
+{
+    cpu_dcache_wb_inv_all();
+    PspKirkRegs *const kirk = KIRK_HW_REGISTER_ADDR;
+
+    kirk->command = 5; // encryption
+    kirk->src_addr = MAKE_PHYS_ADDR(src);
+    kirk->dst_addr = MAKE_PHYS_ADDR(dst);
+
+    // begin processing
+    kirk->proc_phase = 1;
+    SYNC();
+
+    // wait until we advance from the initial phase
+    while ((kirk->proc_phase & 1) != 0);
+
+    // wait until status is set
+    while (kirk->status == 0);
+
+    kirk->status_end = kirk->status & kirk->status_async;
+    SYNC();
+    return kirk->result;
+}
+
 int kirk7(void *dst, const void *src)
 {
     cpu_dcache_wb_inv_all();

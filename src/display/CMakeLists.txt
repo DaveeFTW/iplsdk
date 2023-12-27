@@ -6,7 +6,7 @@ check_ipo_supported(RESULT supported OUTPUT error)
 project(display C)
 
 add_library(display STATIC display.c display.h)
-target_link_libraries(display lcd dmacplus lcdc sysreg cpu)
+target_link_libraries(display lcd dmacplus lcdc interrupt sysreg cpu)
 
 target_include_directories(display
     PUBLIC

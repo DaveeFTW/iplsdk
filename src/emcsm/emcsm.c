@@ -7,7 +7,6 @@
 
 #include <sysreg.h>
 #include <cpu.h>
-#include <interrupt.h>
 #include <model.h>
 
 #include <stddef.h>
@@ -457,7 +456,7 @@ static enum EmcSmError read_access(size_t ppn, void *user, void *spare, size_t l
         return EMCSM_ERR_UNALIGNED;
     }
 
-    uint32_t mask = interrupt_suspend();
+    uint32_t mask = cpu_suspend_interrupts();
 
     g_emcsm_state.access_state.status = 0;
     g_emcsm_state.access_state.len = len;
@@ -493,7 +492,7 @@ static enum EmcSmError read_access(size_t ppn, void *user, void *spare, size_t l
     *EMCSM_DMA_CONTROL_REG = DMA_CONTROL_START | DMA_CONTROL_READ_FROM_NAND | DMA_CONTROL_TX_PAGE_DATA | DMA_CONTROL_TX_SPARE_DATA;
 
 poll_state:
-    interrupt_resume_with_sync(mask);
+    cpu_resume_interrupts_with_sync(mask);
 
     while (g_emcsm_state.state != PROCESS_STATE_INACTIVE) {
         uint32_t intr = *EMCSM_DMA_INTERRUPT_REG;
@@ -634,7 +633,7 @@ static int write_access(size_t ppn, const void *user, const void *spare, size_t 
 
     wait_ready();
 
-    uint32_t mask = interrupt_suspend();
+    uint32_t mask = cpu_suspend_interrupts();
 
     g_emcsm_state.access_state.status = 0;
     g_emcsm_state.access_state.len = num_pages;
@@ -660,7 +659,7 @@ static int write_access(size_t ppn, const void *user, const void *spare, size_t 
     dma_start_write(flags, ppn, user, spare);
 
 poll_state:
-    interrupt_resume_with_sync(mask);
+    cpu_resume_interrupts_with_sync(mask);
 
     while (g_emcsm_state.state != PROCESS_STATE_INACTIVE) {
         uint32_t intr = *EMCSM_DMA_INTERRUPT_REG;

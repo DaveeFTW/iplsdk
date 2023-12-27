@@ -126,3 +126,29 @@ int syscon_get_digital_key(unsigned int *keys)
 {
     return syscon_issue_command_read(SYSCON_GET_DIGITAL_KEY_KERNEL, (unsigned char *)keys);
 }
+
+int syscon_reset_device(unsigned int a0, unsigned int a1)
+{
+    // valid options:
+    // * 1, 1 => param is 1
+    // * 1, 2 => param is 0x41
+    // * x, 0 => param is x
+    // * x, y => param is 0x80 | x
+    uint8_t val;
+
+    if (a0 == 1) {
+        if (a1 == 1) {
+            val = 1;
+        } else if (a1 == 2) {
+            val = 0x41;
+        } else {
+            return -1;
+        }
+    } else if (a1 == 0) {
+        val = a0;
+    } else {
+        val = 0x80 | a0;
+    }
+
+    return syscon_issue_command_write(SYSCON_RESET_DEVICE, (unsigned char *)&val, 1);
+}

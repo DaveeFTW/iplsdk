@@ -1,83 +1,72 @@
 #include "exception.h"
-#include "ebasehandler.h"
 
 #include <cpu.h>
 
 #include <string.h>
 
-static void inf_loop(unsigned int cause, unsigned int epc, unsigned int bad_vaddr, struct Registers *ctx)
+// EXCEPTION_MAX is used extensively below. if for whatever reason this value
+// needs to be changed, then ensure that everything consuming it still works
+#define EXCEPTION_MAX               (32)
+#define GET_TABLE_ENTRY_FLAGS(x)    ((uintptr_t)x & 0b11)
+#define SET_TABLE_ENTRY_FLAGS(a, x) ((EXCEPTION_HANDLER *)((uintptr_t)a | x))
+#define TABLE_ENTRY_FLAG_OCCUPIED   (1 << 0)
+
+extern const unsigned char *nmi_entry;
+extern size_t nmi_entry_size;
+
+extern EXCEPTION_HANDLER default_nmi_handler;
+extern EXCEPTION_HANDLER default_ebase_handler;
+
+extern void exception_set_table(EXCEPTION_HANDLER **table);
+extern void exception_set_nmi_handler(EXCEPTION_HANDLER handler);
+extern void exception_set_ebase_handler(EXCEPTION_HANDLER handler);
+
+static void inf_loop(void)
 {
     while (1);
 }
 
-static EXCEPTION_HANDLER *g_irq_exception_handler = inf_loop;
-static EXCEPTION_HANDLER *g_syscall_exception_handler = inf_loop;
+static EXCEPTION_HANDLER *s_exception_table[EXCEPTION_MAX] = { 0 };
 static EXCEPTION_HANDLER *g_default_exception_handler = inf_loop;
 
-static const char *g_exceptionCause[32] = 
+static void rebuild_exception_table(void)
 {
-    "Interrupt", "TLB modification", "TLB load/inst fetch", "TLB store",
-    "Address load/inst fetch", "Address store", "Bus error (instr)", 
-    "Bus error (data)", "Syscall", "Breakpoint", "Reserved instruction", 
-    "Coprocessor unusable", "Arithmetic overflow", "Unknown 13", "Unknown 14", 
-	"FPU Exception", "Unknown 16", "Unknown 17", "Unknown 18",
-	"Unknown 20", "Unknown 21", "Unknown 22", "Unknown 23", 
-	"Unknown 24", "Unknown 25", "Unknown 26", "Unknown 27", 
-	"Unknown 28", "Unknown 29", "Unknown 30", "Unknown 31"
-};
+    for (size_t i = 0; i < EXCEPTION_MAX; ++i) {
+        unsigned int flags = GET_TABLE_ENTRY_FLAGS(s_exception_table[i]);
 
-const char *exception_get_cause_string(int cause)
-{
-    return g_exceptionCause[(cause >> 2) & 0xF];
-}
-
-enum ExceptionType exception_get_cause(int cause)
-{
-    return (cause >> 2) & 0xF;
-}
-
-void exception_handler(unsigned int cause, unsigned int epc, unsigned int bad_vaddr, struct Registers *ctx)
-{
-    switch (exception_get_cause(cause)) {
-        case EXCEPTION_IRQ:
-            g_irq_exception_handler(cause, epc, bad_vaddr, ctx);
-            break;
-
-        
-        case EXCEPTION_SYSCALL:
-            g_syscall_exception_handler(cause, epc, bad_vaddr, ctx);
-            break;
-
-        default:
-            g_default_exception_handler(cause, epc, bad_vaddr, ctx);
-            break;
+        if (!(flags & TABLE_ENTRY_FLAG_OCCUPIED)) {
+            s_exception_table[i] = g_default_exception_handler;
+        }
     }
 }
 
 void exception_register_handler(enum ExceptionType cause, EXCEPTION_HANDLER *handler)
 {
-    switch (cause) {
-        case EXCEPTION_IRQ:
-            g_irq_exception_handler = handler;
-            break;
-
-        
-        case EXCEPTION_SYSCALL:
-            g_syscall_exception_handler = handler;
-            break;
-    }
+    unsigned int intr = cpu_suspend_interrupts();
+    s_exception_table[cause] = SET_TABLE_ENTRY_FLAGS(handler, TABLE_ENTRY_FLAG_OCCUPIED);
+    cpu_resume_interrupts(intr);
 }
 
 void exception_register_default_handler(EXCEPTION_HANDLER *handler)
 {
+    unsigned int intr = cpu_suspend_interrupts();
     g_default_exception_handler = handler;
+    rebuild_exception_table();
+    cpu_resume_interrupts(intr);
 }
 
 void exception_init(void)
 {
-	memcpy((void *)0xBFC00000, ebase_handler, ebase_handler_size);
+    unsigned int intr = cpu_suspend_interrupts();
+    rebuild_exception_table();
+
+    exception_set_table(s_exception_table);
+    exception_set_nmi_handler(default_nmi_handler);
+	exception_set_ebase_handler(default_ebase_handler);
+
+	memcpy((void *)0xBFC00000, &nmi_entry, nmi_entry_size);
 	cpu_dcache_wb_inv_all();
 	cpu_icache_inv_all();
 
-	exception_register_ebase_handler(ebase_handler);
+    cpu_resume_interrupts(intr);
 }

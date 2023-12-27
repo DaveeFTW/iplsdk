@@ -30,6 +30,7 @@ int syscon_handshake_unlock(void);
 int syscon_get_pommel_version(unsigned int *version);
 int syscon_get_power_status(unsigned int *status);
 int syscon_ctrl_voltage(unsigned int a0, unsigned int a1);
+int syscon_reset_device(unsigned int a0, unsigned int a1);
 
 #define SYSCON_CTRL_UP          (0x00000001)
 #define SYSCON_CTRL_RIGHT       (0x00000002)
@@ -38,7 +39,7 @@ int syscon_ctrl_voltage(unsigned int a0, unsigned int a1);
 #define SYSCON_CTRL_TRIANGLE    (0x00000010)
 #define SYSCON_CTRL_CIRCLE      (0x00000020)
 #define SYSCON_CTRL_CROSS       (0x00000040)
-#define SYSCON_CTRL_RECTANGLE   (0x00000080)
+#define SYSCON_CTRL_SQUARE      (0x00000080)
 #define SYSCON_CTRL_SELECT      (0x00000100)
 #define SYSCON_CTRL_LTRIGGER    (0x00000200)
 #define SYSCON_CTRL_RTRIGGER    (0x00000400)

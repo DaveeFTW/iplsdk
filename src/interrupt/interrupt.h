@@ -70,14 +70,17 @@ enum InterruptType
     IRQ_MS_INSERT1,
     IRQ_UNK_WLAN0,
     IRQ_UNK_WLAN1,
+    IRQ_COUNT,
     IRQ_MAXIMUM_COUNT
 };
 
 enum IrqHandleStatus
 {
-    IRQ_HANDLE_OK,
+    IRQ_HANDLE_NO_RESCHEDULE,
+    IRQ_HANDLE_RESCHEDULE,
 };
 
+typedef void (* RescheduleHookFunction)(void);
 typedef enum IrqHandleStatus (* IrqHandlerFunction)(void);
 
 void interrupt_init(void);
@@ -87,9 +90,7 @@ void interrupt_set_handler(enum InterruptType type, IrqHandlerFunction handler);
 int interrupt_occured(enum InterruptType interrupt);
 void interrupt_clear(enum InterruptType interrupt);
 
-unsigned int interrupt_suspend(void);
-void interrupt_resume(unsigned int mask);
-void interrupt_resume_with_sync(unsigned int mask);
+void interrupt_set_reschedule_hook(RescheduleHookFunction function);
 
 #ifdef __cplusplus
 }

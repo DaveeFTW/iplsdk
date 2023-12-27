@@ -1,7 +1,7 @@
 #include "lcdc.h"
 
 #include <sysreg.h>
-#include <interrupt.h>
+#include <cpu.h>
 #include <model.h>
 
 #include <stdint.h>
@@ -419,7 +419,7 @@ int lcdc_set_mode(unsigned int id, unsigned int x_res, unsigned int y_res, unsig
     }
 
     Mode *mode = &g_displayModes[id];
-    unsigned int mask = interrupt_suspend();
+    unsigned int mask = cpu_suspend_interrupts();
 
     g_lcdc_config.mode_id = id;
     g_lcdc_config.resolution.x = x_res * g_lcdc_config.cycles_per_pixel;
@@ -465,6 +465,6 @@ int lcdc_set_mode(unsigned int id, unsigned int x_res, unsigned int y_res, unsig
     *LCDC_SCALED_X_RES_REG(g_lcdc_config.mmio_base) = g_lcdc_config.resolution.x;
     *LCDC_SCALED_Y_RES_REG(g_lcdc_config.mmio_base) = g_lcdc_config.resolution.y;
 
-    interrupt_resume_with_sync(mask);
+    cpu_resume_interrupts_with_sync(mask);
     return 0;
 }

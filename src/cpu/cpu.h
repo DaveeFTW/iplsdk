@@ -40,9 +40,14 @@ static inline void cpu_sync(void)
 }
 
 void cpu_enable_interrupts(void);
+unsigned int cpu_suspend_interrupts(void);
+void cpu_resume_interrupts(unsigned int mask);
+void cpu_resume_interrupts_with_sync(unsigned int mask);
 unsigned int cpu_get_status(void);
 void cpu_set_status(unsigned int status);
 
+void cpu_dcache_wb_all(void);
+void cpu_dcache_inv_all(void);
 void cpu_dcache_wb_inv_all(void);
 void cpu_icache_inv_all(void);
 

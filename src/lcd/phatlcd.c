@@ -1,7 +1,7 @@
 #include "phatlcd.h"
 
 #include <gpio.h>
-#include <interrupt.h>
+#include <cpu.h>
 #include <dmacplus.h>
 #include <pwm.h>
 
@@ -62,12 +62,12 @@ static void update_display_state(PhatLcdState *state)
                 break;
 
             case DISPLAY_ON:
-                unsigned int intr = interrupt_suspend();
+                unsigned int intr = cpu_suspend_interrupts();
                 state->active_display_state = DISPLAY_ON;
                 state->vsync_defer = 30;
                 enable_display();
                 dmacplus_lcdc_enable();
-                interrupt_resume(intr);
+                cpu_resume_interrupts(intr);
                 break;
         }
     }

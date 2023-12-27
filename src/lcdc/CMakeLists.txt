@@ -6,7 +6,7 @@ check_ipo_supported(RESULT supported OUTPUT error)
 project(lcdc C)
 
 add_library(lcdc STATIC lcdc.c lcdc.h)
-target_link_libraries(lcdc interrupt model sysreg)
+target_link_libraries(lcdc cpu model sysreg)
 
 target_include_directories(lcdc
     PUBLIC

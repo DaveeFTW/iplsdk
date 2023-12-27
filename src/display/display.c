@@ -41,22 +41,22 @@ void set_mode(DisplayState *state, int mode, unsigned int xres, unsigned int yre
 void display_set_mode(int mode, unsigned int xres, unsigned yres, unsigned stride, unsigned int format)
 {
     DisplayState *state = display_state();
-    unsigned int mask = interrupt_suspend();
+    unsigned int mask = cpu_suspend_interrupts();
     state->mode = mode;
     state->xres = xres;
     state->yres = yres;
     state->stride = stride;
     state->format = format;
     state->do_update_mode_on_sync = 1;
-    interrupt_resume_with_sync(mask);
+    cpu_resume_interrupts_with_sync(mask);
 }
 
 void display_set_framebuffer(const void *framebuffer)
 {
     DisplayState *state = display_state();
-    unsigned int mask = interrupt_suspend();
+    unsigned int mask = cpu_suspend_interrupts();
     state->desired_framebuffer = framebuffer;
-    interrupt_resume_with_sync(mask);
+    cpu_resume_interrupts_with_sync(mask);
 }
 
 static void set_backlight_brightness(DisplayState *state, int brightness)
@@ -79,7 +79,7 @@ static enum IrqHandleStatus on_vsync(void)
     }
 
     state->lcd_driver->on_interrupt();
-    return IRQ_HANDLE_OK;
+    return IRQ_HANDLE_NO_RESCHEDULE;
 }
 
 #define APB_CLK_SELECT_APBTIMER0    (0)
@@ -99,7 +99,7 @@ void sysreg_clk_select_apb_timer(uint32_t timer, uint32_t val)
 
 void setup_vblank_irq(void)
 {
-    unsigned int mask = interrupt_suspend();
+    unsigned int mask = cpu_suspend_interrupts();
 
     sysreg_clk2_disable(CLK2_APB_TIMER1);
     sysreg_clk_select_apb_timer(APB_CLK_SELECT_APBTIMER1, 4);
@@ -126,7 +126,7 @@ void setup_vblank_irq(void)
     sysreg_clk_select_apb_timer(APB_CLK_SELECT_APBTIMER1, 7);
     sysreg_clk2_enable(CLK2_APB_TIMER1);
     *REG32(0xBE740024) = 1;
-    interrupt_resume_with_sync(mask);
+    cpu_resume_interrupts_with_sync(mask);
 
     interrupt_set_handler(IRQ_VSYNC, on_vsync);
     interrupt_enable(IRQ_VSYNC);

@@ -5,6 +5,7 @@
 #include <gpio.h>
 #include <model.h>
 #include <interrupt.h>
+#include <cpu.h>
 
 typedef enum {
     ACTIVE_LOW,
@@ -102,7 +103,7 @@ static void blink_led(LedState *led)
     // wrap our ticker around the period of the blink
     led->cur_tick = (led->cur_tick + 1) % (led->on_time + led->off_time);
 
-    if (led->cur_tick < led->on_time) {
+    if (led->cur_tick <= led->on_time) {
         turn_on_led(led->gpio_port, led->logic_level);
     } else {
         turn_off_led(led->gpio_port, led->logic_level);
@@ -183,7 +184,7 @@ static enum IrqHandleStatus on_vsync(void)
         on_vsync_led(g_led_states[i]);
     }
 
-	return IRQ_HANDLE_OK;
+	return IRQ_HANDLE_NO_RESCHEDULE;
 }
 
 void led_set_mode(enum Led led, enum LedMode mode, const LedConfig *config)
@@ -194,6 +195,8 @@ void led_set_mode(enum Led led, enum LedMode mode, const LedConfig *config)
         return;
     }
 
+    unsigned int intr = cpu_suspend_interrupts();
+
     state->mode = mode;
     state->req_action = 1;
     state->cur_tick = 0;
@@ -203,6 +206,8 @@ void led_set_mode(enum Led led, enum LedMode mode, const LedConfig *config)
         state->off_time = config->off_time;
         state->blink_time = config->blink_time;
     }
+
+    cpu_resume_interrupts(intr);
 }
 
 void led_init(void)

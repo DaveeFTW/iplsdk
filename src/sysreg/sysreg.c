@@ -1,5 +1,5 @@
 #include "sysreg.h"
-#include "interrupt.h"
+#include "cpu.h"
 
 #include <stdint.h>
 
@@ -180,7 +180,7 @@ uint32_t sysreg_get_tachyon_version(void)
     static uint32_t s_tachyon_version = -1;
 
     if (s_tachyon_version == -1) {
-        uint32_t mask = interrupt_suspend();
+        uint32_t mask = cpu_suspend_interrupts();
         uint32_t cfg = *SYSREG_CONFIG_REG;
 
         if ((cfg & 0xFF000000) != 0) {
@@ -190,7 +190,7 @@ uint32_t sysreg_get_tachyon_version(void)
             s_tachyon_version = 0x100000;
         }
 
-        interrupt_resume(mask);
+        cpu_resume_interrupts(mask);
     }
 
     return s_tachyon_version;

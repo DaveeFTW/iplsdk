@@ -6,7 +6,7 @@ check_ipo_supported(RESULT supported OUTPUT error)
 project(sysreg C)
 
 add_library(sysreg STATIC sysreg.c sysreg.h)
-target_link_libraries(sysreg interrupt)
+target_link_libraries(sysreg cpu)
 
 target_include_directories(sysreg
     PUBLIC

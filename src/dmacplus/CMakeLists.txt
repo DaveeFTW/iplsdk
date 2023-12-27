@@ -6,7 +6,7 @@ check_ipo_supported(RESULT supported OUTPUT error)
 project(dmacplus C)
 
 add_library(dmacplus STATIC dmacplus.c dmacplus.h)
-target_link_libraries(dmacplus interrupt sysreg syscon)
+target_link_libraries(dmacplus cpu sysreg syscon)
 
 target_include_directories(dmacplus
     PUBLIC

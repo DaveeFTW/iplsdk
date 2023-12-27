@@ -1,8 +1,11 @@
 #include "emcddr.h"
 
 #include <sysreg.h>
+#include <syscon.h>
+#include <cpu.h>
 
 #include <stddef.h>
+#include <string.h>
 
 #define REG32(addr)                 ((volatile uint32_t *)(addr))
 #define EMCDDR_MMIO_BASE            (0xBD000000)
@@ -25,18 +28,19 @@
 #define EMCDDR_UNK40_REG            REG32(EMCDDR_MMIO_BASE + 0x40)
 #define EMCDDR_UNK44_REG            REG32(EMCDDR_MMIO_BASE + 0x44)
 
+extern void emcddr_power_down_counter(int unk);
+extern void emcddr_set_params2(int, int);
+extern void emcddr_set_params3(int, int);
+extern void emcddr_flush(int);
+
 typedef struct
 {
     uint32_t unk0;
     uint32_t unk4;
 } DdrParams;
 
-static inline void sync(void)
+static const DdrParams *params_for_type(enum DdrType type)
 {
-    __asm("sync");
-}
-
-static const DdrParams *params_for_type(enum DdrType type) {
     static const DdrParams g_params_32mb =
     {
         .unk0 = UNK30_BIT4,
@@ -61,75 +65,29 @@ static const DdrParams *params_for_type(enum DdrType type) {
     return NULL;
 }
 
+
+static unsigned int g_ddr_self_test[16] __attribute__ ((aligned (64))) = {
+    0x00000000, 0xFFFFFFFF, 0x55555555, 0xAAAAAAAA,
+    0x00000000, 0xFFFFFFFF, 0x55555555, 0xAAAAAAAA,
+    0x00000000, 0xFFFFFFFF, 0x55555555, 0xAAAAAAAA,
+    0x00000000, 0xFFFFFFFF, 0x55555555, 0xAAAAAAAA,
+};
+
 static void set_ddr_params(enum DdrType type)
 {
     const DdrParams *params = params_for_type(type);
     *EMCDDR_UNK30_REG = (*EMCDDR_UNK30_REG & ~(UNK30_BIT5 | UNK30_BIT4 | UNK30_BIT0)) | params->unk0;
     *EMCDDR_UNK38_REG = params->unk4;
-    sync();
-}
-
-typedef struct
-{
-    uint32_t unk0;
-    uint32_t unk4;
-} DdrParams2;
-
-static const DdrParams2 g_ddr_params2[] = {
-    // 0
-    {
-        .unk0 = 0x11110000,
-        .unk4 = 0x6000F,
-    },
-    // 1
-    {
-        .unk0 = 0x11110000,
-        .unk4 = 0x7000F,
-    },
-    // 2
-    {
-        .unk0 = 0x11110000,
-        .unk4 = 0x7000F,
-    },
-    // 3
-    {
-        .unk0 = 0x11110400,
-        .unk4 = 0x70000,
-    },
-    // there are more, but PSP only seems to use number 3 anyway
-};
-
-static void set_ddr_params2(int unk, int unk2)
-{
-    *EMCDDR_UNK30_REG = (*EMCDDR_UNK30_REG & (UNK30_BIT5 | UNK30_BIT4 | UNK30_BIT0)) | ((unk2 - 3) << 12) | g_ddr_params2[unk].unk0;
-    *EMCDDR_UNK44_REG = g_ddr_params2[unk].unk4 & 0xFFFF;
-    *EMCDDR_UNK34_REG = g_ddr_params2[unk].unk4 >> 16;
-    sync();
-}
-
-static void set_ddr_params3(int unk, int unk2)
-{
-    *EMCDDR_UNK40_REG = unk2 | 0x10;
-    (void)*EMCDDR_UNK40_REG;
-    *EMCDDR_UNK40_REG = unk | 0x10;
-    (void)*EMCDDR_UNK40_REG;
-    *EMCDDR_UNK40_REG = 0x20;
-    sync();
-}
-
-static void set_power_down_counter(int unk)
-{
-    *EMCDDR_POWER_DOWN_CTR_REG = (unk < 0) ? (0) : (0x80000000 | unk);
-    sync();
+    cpu_sync();
 }
 
 static void exec_cmd(uint32_t cmd, uint32_t unk, uint32_t param)
 {
     while (*EMCDDR_UNK20_REG & UNK20_BIT16);
     *EMCDDR_UNK24_REG = ((cmd & 1) << 10) | (unk << 16) | (param & ~(0x8400));
-    sync();
+    cpu_sync();
     *EMCDDR_UNK20_REG = cmd | UNK20_BIT15;
-    sync();
+    cpu_sync();
     while (*EMCDDR_UNK20_REG & UNK20_BIT16);
 }
 
@@ -142,12 +100,81 @@ static void reset_device(int dev, int unk)
     exec_cmd(0x20, 2, unk << 5);
 }
 
-void init_ddr(enum DdrType type)
+static unsigned int get_fuse_id_based_code(void)
+{
+    // unused
+    unsigned int sys_flag = *(volatile unsigned int *)0xBC100040;
+    (void)sys_flag;
+
+    unsigned int fuse_config = *(volatile unsigned int *)0xBC100098;
+
+    switch (fuse_config & 0x700) {
+        case 0x000:
+            return 0x700;
+        case 0x100:
+            return 0x600;
+        case 0x200:
+            return 0x500;
+        case 0x300:
+            return 0x400;
+        case 0x400:
+            return 0x300;
+        case 0x500:
+            return 0x200;
+        case 0x600:
+            return 0x100;
+        case 0x700:
+            return 0x000;
+    }
+
+    return 0;
+}
+
+extern unsigned char __emcddr_support_code_start;
+extern unsigned char __emcddr_support_code_end;
+
+static void ddr_related_reconfiguration(unsigned int unk)
+{
+    // no idea, some power feature?
+    syscon_ctrl_voltage(1, get_fuse_id_based_code());
+
+    // again not sure. some GE edram settings?
+    *(volatile unsigned int *)0xBD500020 = 0x510;
+
+    cpu_dcache_wb_inv_all();
+
+    // protect some memory?
+    unsigned int range_prot = *(volatile unsigned int *)0xBC000044;
+    *(volatile unsigned int *)0xBC000044 = range_prot & 0xC000ffff;
+
+    // no-op read
+    unsigned int unused = *(volatile unsigned int *)0xBC100068;
+    (void)unused;
+
+    memcpy((void *)0xBFC00C00, &__emcddr_support_code_start, &__emcddr_support_code_end - &__emcddr_support_code_start);
+    cpu_dcache_wb_inv_all();
+
+    unsigned flag = (*(volatile unsigned int *)0xBC10004C & 4) ? 5 : 0xF;
+    emcddr_flush(flag);
+
+    typedef void (* DDR_INIT2)(unsigned int a0, unsigned int a1, unsigned int a2, unsigned int a3, unsigned int t0, unsigned int *t1);
+    DDR_INIT2 init2 = (DDR_INIT2)0xBFC00C00;
+    init2(unk, 3, -1, 8, 10, &g_ddr_self_test[0]);
+    *(volatile unsigned int *)0xBC000044 = range_prot;
+
+    // no-op read
+    unsigned int unused2 = *(volatile unsigned int *)0xBC100068;
+    (void)unused2;
+    cpu_sync();
+}
+
+void emcddr_init(enum DdrType type)
 {
     sysreg_busclk_enable(BUSCLK_EMCDDR);
     set_ddr_params(type);
-    set_ddr_params2(3, 3);
-    set_ddr_params3(8, 10);
-    set_power_down_counter(4);
+    emcddr_set_params2(3, 3);
+    emcddr_set_params3(8, 10);
+    emcddr_power_down_counter(4);
     reset_device(3, 1);
+    ddr_related_reconfiguration(5);
 }

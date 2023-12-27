@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.9.4)
 include(CheckIPOSupported)
 check_ipo_supported(RESULT supported OUTPUT error)
 
-project(interrupt ASM)
+project(interrupt C)
 
 add_library(interrupt STATIC interrupt.c interrupt.S interrupt.h)
 target_link_libraries(interrupt exception cpu)

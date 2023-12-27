@@ -1,7 +1,7 @@
 #include "dmacplus.h"
 
 #include <sysreg.h>
-#include <interrupt.h>
+#include <cpu.h>
 
 #include <stdint.h>
 #include <string.h>
@@ -50,13 +50,13 @@ int dmacplus_lcdc_set_base_addr(uintptr_t addr)
     // TODO: some addresses aren't valid. figure out and
     // implement a whitelist
 
-    unsigned int mask = interrupt_suspend();
+    unsigned int mask = cpu_suspend_interrupts();
 
     if (!addr) {
         if (g_lcdc_config.state != FRAMEBUFFER_INTERNAL) {
             uint32_t cfg = *LCDC_FRAMEBUFFER_CFG_REG;
             *LCDC_FRAMEBUFFER_CFG_REG = cfg & ~CONFIG_SCANOUT_ENABLED;
-            *LCDC_FRAMEBUFFER_ADDR_REG = (uintptr_t)g_empty_framebuffer_ptr & 0x1fffffff;
+            *LCDC_FRAMEBUFFER_ADDR_REG = (uintptr_t)g_empty_framebuffer_ptr & 0x1FFFFFFF;
             *LCDC_FRAMEBUFFER_STRIDE_REG = 0;
             *LCDC_FRAMEBUFFER_CFG_REG = cfg;
             g_lcdc_config.state = FRAMEBUFFER_INTERNAL;
@@ -68,7 +68,7 @@ int dmacplus_lcdc_set_base_addr(uintptr_t addr)
         if (g_lcdc_config.state != FRAMEBUFFER_ASSIGNED) {
             uint32_t cfg = *LCDC_FRAMEBUFFER_CFG_REG;
             *LCDC_FRAMEBUFFER_CFG_REG = cfg & ~CONFIG_SCANOUT_ENABLED;
-            *LCDC_FRAMEBUFFER_ADDR_REG = addr & 0x1fffffff;
+            *LCDC_FRAMEBUFFER_ADDR_REG = addr & 0x1FFFFFFF;
             *LCDC_FRAMEBUFFER_STRIDE_REG = g_lcdc_config.stride;
             *LCDC_FRAMEBUFFER_CFG_REG = cfg;
             g_lcdc_config.state = FRAMEBUFFER_ASSIGNED;
@@ -76,7 +76,7 @@ int dmacplus_lcdc_set_base_addr(uintptr_t addr)
 
         else {
             // we can just update the framebuffer address only
-            *LCDC_FRAMEBUFFER_ADDR_REG = addr & 0x1fffffff;
+            *LCDC_FRAMEBUFFER_ADDR_REG = addr & 0x1FFFFFFF;
         }
     }
 
@@ -85,7 +85,7 @@ int dmacplus_lcdc_set_base_addr(uintptr_t addr)
     }
 
     g_lcdc_config.framebuffer = addr;
-    interrupt_resume_with_sync(mask);
+    cpu_resume_interrupts_with_sync(mask);
     return 0;
 }
 
@@ -115,14 +115,14 @@ int dmacplus_lcdc_set_format(unsigned int width, unsigned int stride, enum Pixel
 
 void dmacplus_lcdc_enable(void)
 {
-    unsigned int mask = interrupt_suspend();
+    unsigned int mask = cpu_suspend_interrupts();
 
     if (!g_lcdc_config.enabled || g_lcdc_config.has_error) {
         g_lcdc_config.has_error = 0;
 
         // TODO: check for blacklisted framebuffers...
         if (!g_lcdc_config.framebuffer) {
-            *LCDC_FRAMEBUFFER_ADDR_REG = (uintptr_t)g_empty_framebuffer_ptr;
+            *LCDC_FRAMEBUFFER_ADDR_REG = (uintptr_t)g_empty_framebuffer_ptr & 0x1FFFFFFF;
             *LCDC_FRAMEBUFFER_STRIDE_REG = 0;
         }
         else {
@@ -134,19 +134,19 @@ void dmacplus_lcdc_enable(void)
         g_lcdc_config.enabled = 1;
     }
 
-    interrupt_resume_with_sync(mask);
+    cpu_resume_interrupts_with_sync(mask);
 }
 
 void dmacplus_lcdc_disable(void)
 {
-    unsigned int mask = interrupt_suspend();
+    unsigned int mask = cpu_suspend_interrupts();
 
     if (g_lcdc_config.enabled) {
         *LCDC_FRAMEBUFFER_CFG_REG &= ~CONFIG_SCANOUT_ENABLED;
         g_lcdc_config.enabled = 0;
     }
 
-    interrupt_resume_with_sync(mask);
+    cpu_resume_interrupts_with_sync(mask);
 }
 
 void dmacplus_lcdc_init(void)
@@ -158,7 +158,7 @@ void dmacplus_lcdc_init(void)
         g_empty_framebuffer_ptr += 1;
     }
 
-    unsigned int mask = interrupt_suspend();
+    unsigned int mask = cpu_suspend_interrupts();
 
     g_lcdc_config.state = FRAMEBUFFER_NEEDS_INIT;
     g_lcdc_config.enabled = 0;
@@ -187,7 +187,7 @@ void dmacplus_lcdc_init(void)
     // probably some enable or init?
     *LCDC_FRAMEBUFFER_CFG_REG |= CONFIG_UNK_BIT1;
 
-    interrupt_resume_with_sync(mask);
+    cpu_resume_interrupts_with_sync(mask);
     dmacplus_lcdc_enable();
 }
 

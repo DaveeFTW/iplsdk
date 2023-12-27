@@ -6,7 +6,7 @@ check_ipo_supported(RESULT supported OUTPUT error)
 project(emcddr C)
 
 add_library(emcddr STATIC emcddr.c emcddr.h)
-target_link_libraries(emcddr sysreg cpu)
+target_link_libraries(emcddr syscon sysreg cpu)
 
 target_include_directories(emcddr
     PUBLIC

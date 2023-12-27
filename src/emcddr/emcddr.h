@@ -10,7 +10,7 @@ enum DdrType
     DDR_TYPE_64MB
 };
 
-void init_ddr(enum DdrType type);
+void emcddr_init(enum DdrType type);
 
 #ifdef __cplusplus
 }
